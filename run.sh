@@ -1,12 +1,12 @@
 #!/bin/sh
 
-path="$1"
-
 set -e
 
+path="$1"
+
 if [ -z "$path" ]; then
-    echo "The source path is not specified"
-    exit 1
+  echo "The source path is not specified">&2
+  exit 1
 fi
 
 jobName="cleanupReolink"

@@ -1,31 +1,49 @@
 #!/bin/sh
 
-getOldestFolder() {
+getOldestDirectory() {
   sourcePath=$(echo "$1" | sed 's:/*$::')
-  oldestFolderPath=$(ls -luArd -1 "$sourcePath"/* | grep "^d" | head -1 | awk '{print $NF}')
+  oldestDirectoryPath=$(ls -luArd -1 "$sourcePath"/* | grep "^d" | head -1 | awk '{print $NF}')
 
-  if [ "$oldestFolderPath" ]; then
-    echo "$oldestFolderPath"
+  if [ "$oldestDirectoryPath" ]; then
+    echo "$oldestDirectoryPath"
     return 0
   fi
 
-  echo "Unable to get oldest folder from '$sourcePath'.">&2
+  echo "Unable to get oldest directory from '$sourcePath'.">&2
   exit 1
 }
 
 cleanupOldRecords() {
-  recordsFolder="$1"
+  recordsDirectory="$1"
 
-  if rm -fR "$recordsFolder"; then
-    echo "The '$recordsFolder' was deleted."
+  if rm -fR "$recordsDirectory"; then
+    echo "The '$recordsDirectory' was deleted."
   fi
 }
 
-removeEmptyFolder() {
+removeDirectoryIfEmpty() {
   path="$1"
 
+  if [ "$(ls -A "$path")" ]; then
+    echo "The directory with path '$path' is not empty."
+    return 0
+  fi
+
   if rmdir "$path"; then
-    echo "The empty folder with path '$path' was deleted."
+    echo "The directory with path '$path' was deleted."
+    return 0
+  fi
+
+  echo "Unable to delete directory with path '$path'"
+}
+
+ensureDirectoryExists() {
+  directoryPath="$1"
+
+  if [ ! -d "$directoryPath" ]
+  then
+    echo "The directory with path '$reolinkDirectoryPath' not found.">&2
+    exit 1
   fi
 }
 
@@ -34,23 +52,25 @@ set -e
 echo "Starting cleaning of old records from Reolink cameras..."
 echo "Date: $(date)"
 
-reolinkFolderPath=$1
+reolinkDirectoryPath="$1"
 
-if [ ! -d "$reolinkFolderPath" ]; then
-  echo "The source path '$reolinkFolderPath' not found.">&2
+if [ -z "$reolinkDirectoryPath" ]; then
+  echo "The Reolink directory path is not specified">&2
+  exit 1
 fi
 
-echo "Source path: $reolinkFolderPath"
+ensureDirectoryExists $reolinkDirectoryPath
+echo "Source path: $reolinkDirectoryPath"
 
-oldestYearFolderPath=$(getOldestFolder "$reolinkFolderPath")
-echo "Year folder: $oldestYearFolderPath"
+oldestYearDirectoryPath=$(getOldestDirectory "$reolinkDirectoryPath")
+echo "Year directory: $oldestYearDirectoryPath"
 
-oldestMonthFolderPath=$(getOldestFolder "$oldestYearFolderPath")
-echo "Month folder: $oldestMonthFolderPath"
+oldestMonthDirectoryPath=$(getOldestDirectory "$oldestYearDirectoryPath")
+echo "Month directory: $oldestMonthDirectoryPath"
 
-oldestDayFolderPath=$(getOldestFolder "$oldestMonthFolderPath")
-echo "Day folder: $oldestDayFolderPath"
+oldestDayDirectoryPath=$(getOldestDirectory "$oldestMonthDirectoryPath")
+echo "Day directory: $oldestDayDirectoryPath"
 
-cleanupOldRecords "$oldestDayFolderPath"
-removeEmptyFolder "$oldestMonthFolderPath"
-removeEmptyFolder "$oldestYearFolderPath"
+cleanupOldRecords "$oldestDayDirectoryPath"
+removeDirectoryIfEmpty "$oldestMonthDirectoryPath"
+removeDirectoryIfEmpty "$oldestYearDirectoryPath"
