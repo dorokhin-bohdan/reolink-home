@@ -10,10 +10,12 @@ if [ -z "$path" ]; then
 fi
 
 jobName="cleanupReolink"
-cleanupScript="./cleanup.sh"
+cleanupScriptName="cleanup.sh"
+cleanupScriptPath="$(pwd)/$cleanupScriptName"
+outputLogPath="$(pwd)/cleanup-log.txt"
 
 echo "Allow executing file as program..."
-chmod +x "$cleanupScript"
+chmod +x "$cleanupScriptName"
 echo "Allowed"
 
 echo "Removing old cron job..."
@@ -21,5 +23,5 @@ cru d "$jobName"
 echo "Removed"
 
 echo "Adding cron job with name '$jobName'..."
-cru a $jobName "0 0 */1 * * $cleanupScript $path > cleanup-log.txt"
+cru a $jobName "0 0 */1 * * $cleanupScriptPath $path > $outputLogPath"
 echo "Added"
